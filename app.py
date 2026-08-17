@@ -81,17 +81,20 @@ if st.button("Predict Satisfaction"):
         'Baggage Handling': baggage
     }
     
-    # Convert to DataFrame
+    # 1. Safely map categorical strings to integers before creating the DataFrame
+    for col in encoders:
+        input_data[col] = encoders[col][input_data[col]]
+        
+    # 2. Convert to DataFrame
     input_df = pd.DataFrame([input_data])
     
-    # Apply Categorical Encoding
-    for col in encoders:
-        input_df[col] = input_df[col].map(encoders[col])
-        
-    # Ensure exact column order as training
+    # 3. Ensure exact column order as training
     input_df = input_df[feature_names]
     
-    # Predict directly on unscaled data (XGBoost was trained on raw X_train)
+    # 4. FORCE strictly numeric datatypes to prevent XGBoost silent failures
+    input_df = input_df.astype(float)
+    
+    # Predict directly on the numeric data
     prediction = model.predict(input_df)[0]
     probabilities = model.predict_proba(input_df)[0]
     
