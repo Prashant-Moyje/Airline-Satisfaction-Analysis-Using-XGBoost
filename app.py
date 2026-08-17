@@ -84,23 +84,23 @@ if st.button("Predict Satisfaction"):
     # Convert to DataFrame
     input_df = pd.DataFrame([input_data])
     
-    # Apply Encoding exactly as trained
+    # Apply Categorical Encoding
     for col in encoders:
-        # We manually map the string back to the integer using the saved dictionary
         input_df[col] = input_df[col].map(encoders[col])
         
-    # Ensure correct column order before scaling
+    # Ensure exact column order as training
     input_df = input_df[feature_names]
     
-    # Apply Scaling
-    input_scaled = scaler.transform(input_df)
+    # Predict directly on unscaled data (XGBoost was trained on raw X_train)
+    prediction = model.predict(input_df)[0]
+    probabilities = model.predict_proba(input_df)[0]
     
-    # Predict
-    prediction = model.predict(input_scaled)
+    satisfied_prob = probabilities[1] * 100
+    dissatisfied_prob = probabilities[0] * 100
     
     # Display Result
     st.markdown("---")
-    if prediction[0] == 1:
-        st.success("### ✅ The passenger is likely to be **Satisfied**.")
+    if prediction == 1:
+        st.success(f"### ✅ The passenger is likely to be **Satisfied** ({satisfied_prob:.1f}% confidence)")
     else:
-        st.error("### ❌ The passenger is likely to be **Neutral or Dissatisfied**.")
+        st.error(f"### ❌ The passenger is likely to be **Neutral or Dissatisfied** ({dissatisfied_prob:.1f}% confidence)")
