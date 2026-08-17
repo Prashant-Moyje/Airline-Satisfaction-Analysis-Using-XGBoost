@@ -52,7 +52,6 @@ with col2:
     ease_booking = st.slider("Ease of Online Booking", 0, 5, 3)
     gate_location = st.slider("Gate Location", 0, 5, 3)
 
-
 # 3. Prediction Logic
 if st.button("Predict Satisfaction"):
     # Create a dictionary of inputs
@@ -81,22 +80,22 @@ if st.button("Predict Satisfaction"):
         'Baggage Handling': baggage
     }
     
-    # 1. Safely map categorical strings to integers before creating the DataFrame
+    # 1. Safely map categorical strings to integers
     for col in encoders:
         input_data[col] = encoders[col][input_data[col]]
         
     # 2. Convert to DataFrame
     input_df = pd.DataFrame([input_data])
     
-    # 3. Ensure exact column order as training
-    input_df = input_df[feature_names]
+    # 3. Force exact column order and cast to float
+    input_df = input_df[feature_names].astype(float)
     
-    # 4. FORCE strictly numeric datatypes to prevent XGBoost silent failures
-    input_df = input_df.astype(float)
+    # 4. STRIP Pandas metadata to prevent silent XGBoost column shuffling
+    input_array = input_df.values
     
-    # Predict directly on the numeric data
-    prediction = model.predict(input_df)[0]
-    probabilities = model.predict_proba(input_df)[0]
+    # Predict directly on the raw numpy array
+    prediction = model.predict(input_array)[0]
+    probabilities = model.predict_proba(input_array)[0]
     
     satisfied_prob = probabilities[1] * 100
     dissatisfied_prob = probabilities[0] * 100
